@@ -1,0 +1,318 @@
+//HW8.  Due: Thursday, Dec 8 at 11:59pm
+
+#include <iostream>
+#include <map>
+#include <list>
+#include <vector>
+#include <set>
+#include <unordered_set>
+#include <unordered_map>
+
+using namespace std;
+//For Part I:
+//For all comparisons, compare the sums of all int objects in the key parts of structures.
+//For all hashing, use h(sum of all int objects in the key parts of structures), where hash<int> h;
+
+
+//Part II:
+//For all comparisons, compare the sums of all int objects in the key parts of structures.
+//For all hashing, use h(sum of all int objects in the key parts of structures), where hash<int> h;
+class Matrix {
+public:
+	int Rows;
+	int Cols;
+	vector<vector<int>> Data;//holds the actual matrix data
+	//Construct a matrix of i rows and j cols, with random values in 0 ... k-1
+	Matrix(int i, int j, int k) {
+		Rows = i;
+		Cols = j;
+		for (auto i = 0; i < Rows; i++) {
+			auto v = new vector<int>{};
+			for (auto j = 0; j < Cols; j++) {
+				v->push_back(rand() % k);
+			}
+			Data.push_back(*v);
+		}
+	}
+	Matrix() { Rows = 0; Cols = 0; };
+
+};
+
+struct myFunctorClass {
+	template <class T> size_t operator()(const map<list<set<T*, myFunctorClass>>, vector<T*>*, myFunctorClass>& m) const {//hsah funciton for vector<int> keys
+		int sum{ 0 };
+		hash<int>h;
+		//hash<int> h1;
+		for (auto& i : m) {
+			for (auto j : i.first) {
+				for (auto k : j) {
+					sum += *k;
+				}
+			}
+			for (auto l : *i.second) { sum += *l; }
+		}
+		return h(sum);//hash<int>{} an anonymous hash function
+		//return h1(sum);
+
+	}
+
+	unsigned int operator()(const Matrix& m) const {//hsah funciton for vector<int> keys
+		int sum{ 0 };
+		hash<int>h;
+		//hash<int> h1;
+		for (auto i : m.Data) {
+			for (auto j : i) {
+				sum += j;
+			}
+		}
+		return h(sum);//hash<int>{} an anonymous hash function
+		//return h1(sum);
+
+	}
+
+	//cout << ThreeD{}{3,4,5} << endl;
+	bool operator()(const int* i1, const int* i2) const {
+		return *i1 < *i2;
+	}
+
+	bool operator()(const list<set<int*, myFunctorClass>>& l1, const list<set<int*, myFunctorClass>>& l2) const {
+		int sum1{ 0 }, sum2{ 0 };
+		for (auto i : l1) {
+			for (auto j : i) {
+				sum1 += *j;
+			}
+		}
+		for (auto i : l2) {
+			for (auto j : i) {
+				sum2 += *j;
+			}
+		}
+		return sum1 < sum2;
+	}
+
+	template <class T1, class T2> bool operator()(const map<T1, T2*, myFunctorClass>& m1, const map<T1, T2*, myFunctorClass>& m2) const {
+		int sum1{ 0 }, sum2{ 0 };
+		for (auto& i : m1) {
+			for (auto j : i.first) {
+				for (auto k : j) {
+					sum1 += *k;
+				}
+			}
+			for (auto h : *i.second) { sum1 += *h; }
+		}
+		for (auto& i : m2) {
+			for (auto j : i.first) {
+				for (auto k : j) {
+					sum2 += *k;
+				}
+			}
+			for (auto h : *i.second) { sum2 += *h; }
+		}
+
+		return sum1 == sum2;
+	}
+
+	bool operator()(const Matrix& m1, const Matrix& m2) const {
+		int sum1{ 0 }, sum2{ 0 };
+		for (auto i : m1.Data) {
+			for (auto j : i) {
+				sum1 += j;
+			}
+		}
+
+		for (auto i : m2.Data) {
+			for (auto j : i) {
+				sum2 += j;
+			}
+		}
+
+		return sum1 == sum2 && m1.Rows == m2.Rows && m1.Cols == m2.Cols;
+	}
+};
+
+
+////Implement the followng two functions:
+void Add_Matrix(unordered_set<Matrix, myFunctorClass, myFunctorClass>& DB, Matrix m) {
+	DB.insert(m);
+}
+void Delete_Matrix(unordered_set<Matrix, myFunctorClass, myFunctorClass>& DB, Matrix m) {
+	DB.erase(DB.find(m));
+}
+
+
+
+template <class T> ostream& operator<<(ostream& str, const set<T*, myFunctorClass> s) {
+	str << "< ";
+	for (auto i : s) {
+		str << *i << " ";
+	}
+	str << ">";
+	return str;
+}
+
+template <class T> ostream& operator<<(ostream& str, const list<T> l) {
+	str << "[ ";
+	for (auto i : l) {
+		str << i << " ";
+	}
+	str << "]";
+	return str;
+}
+
+template <class T> ostream& operator<<(ostream& str, const vector<T*> v) {
+	str << "( ";
+	for (auto i : v) {
+		str << *i << " ";
+	}
+	str << ")";
+	return str;
+}
+
+
+
+template <class T1, class T2> ostream& operator<<(ostream& str, const map<T1, T2*, myFunctorClass> m) {
+	str << "{ ";
+	for (auto i : m) {
+		str << i.first << " " <<  *i.second;
+	}
+	str << "}";
+	return str;
+}
+
+template<class T1, class T2> ostream& operator<<(ostream& str, const unordered_map<T1, T2*, myFunctorClass, myFunctorClass> M) {
+	str << "{ " << endl;
+	for (unsigned int i = 0; i < M.bucket_count(); ++i) {
+		str << "bucket " << i << " contains: " ;
+		for (auto it = M.begin(i); it != M.end(i); ++it) {
+			str << it->first << " " << *(it->second);
+		}
+		str << endl;
+	}
+	str << "}";
+	return str;
+}
+
+template <class T> ostream& operator<<(ostream& str, const vector<T> v) {
+	for (auto i : v) {
+		str << i << " ";
+	}
+	return str;
+}
+
+ostream& operator<<(ostream& str, const Matrix& m) {
+	for (auto i : m.Data) {
+		str << i << endl;
+	}
+	return str;
+}
+template <class T> ostream& operator<<(ostream& str, const unordered_set<T, myFunctorClass, myFunctorClass> s) {
+	for (auto i : s) {
+		str << i << endl;
+	}
+	return str;
+}
+int main() {
+//Part I
+	//The following won't compiler.  Fix it.
+	//In addition, create your initialized values. For each STL container, at least three elements are required.
+
+	set<int*, myFunctorClass> s1{new int(1), new int(9), new int(12)};
+	set<int*, myFunctorClass> s2{new int(4), new int(6), new int(11)};
+	set<int*, myFunctorClass> s3{ new int(1), new int(2), new int(9) };
+	set<int*, myFunctorClass> s4{ new int(9), new int(17), new int(25) };
+	set<int*, myFunctorClass> s5{ new int(1), new int(5), new int(17) };
+	set<int*, myFunctorClass> s6{ new int(2), new int(4), new int(17) };
+	vector<int*>* v1 = new vector<int*>{ new int(8), new int(14), new int(19) };
+	vector<int*>* v2 = new vector<int*>{ new int(16), new int(5), new int(27) };
+	vector<int*>* v3 = new vector<int*>{ new int(3), new int(12), new int(16) };
+	vector<int*>* v4 = new vector<int*>{ new int(3), new int(22), new int(7) };
+	vector<int*>* v5 = new vector<int*>{ new int(11), new int(15), new int(7) };
+	vector<int*>* v6 = new vector<int*>{ new int(18), new int(1), new int(1) };
+	list<set<int*, myFunctorClass>> l1{s1, s2, s3};
+	list<set<int*, myFunctorClass>> l2{s4, s1, s2};
+	list<set<int*, myFunctorClass>> l3{s4, s1, s5};
+	list<set<int*, myFunctorClass>> l4{s4, s5, s3};
+	list<set<int*, myFunctorClass>> l5{s4, s5, s6};
+	list<set<int*, myFunctorClass>> l6{s6, s5, s1};
+
+
+	unordered_map< map < list<set<int*, myFunctorClass>>, vector<int*>*, myFunctorClass>, vector<int*>*, myFunctorClass, myFunctorClass>  UM1{ 
+		{{{l1, v1}, {l2, v2}, {l3, v3}}, v3},
+		{{{l1, v1}, {l4, v4}, {l5, v5}}, v5},
+		{{{l6, v6}, {l2, v4}, {l3, v3}}, v2}, 
+		{{{l1, v1}, {l4, v4}, {l2, v2}}, v4}, 
+		{{{l6, v3}, {l4, v4}, {l2, v2}}, v1}
+	};
+	//You can introduce some varialbes in the initiliaztion part of the above statement.
+
+	//Overload operator<< to allow the following statement.
+	cout << UM1 << endl;
+
+
+
+//Part II
+	int n{	6 };
+////	//The following statement won't compile.  Fix it.
+	vector<Matrix> V;
+	unordered_set<Matrix, myFunctorClass, myFunctorClass> DB;
+	for (int i = 0; i < n; ++i) {
+	Matrix m((rand() % 10) +1, (rand() % 8)+1, 20);
+	Add_Matrix(DB, m);
+	V.push_back(m);
+	}
+	cout << V;
+	cout << endl;
+	cout << DB << endl;
+	for (int i = 0; i < n; ++i) {
+		if (i % 5 == 0) {
+			Delete_Matrix(DB, V[i]);
+		}
+	}
+	cout << endl;
+	cout << DB << endl;
+
+	return 0;
+}
+
+/*
+//Part I
+
+The following is a possible output.
+Depending on the initialization values you select, the output values will be different.
+However, do follow the same format for set, map, vector and list.
+
+
+{
+{  [ < 3 5 7 > < 2 5 8 > < 3 6 11 > ] ( 7 19 13 )  [ < 3 5 17 > < 3 5 8 > < 1 3 6 > ] ( 4 14 3 )  [ < 1 7 13 > < 1 2 15 > < 6 16 20 > ] ( 5 19 4 )  } ( 7 8 9 )
+{  [ < 3 5 7 > < 2 5 8 > < 3 6 11 > ] ( 7 11 3 )  [ < 3 5 17 > < 3 5 8 > < 1 3 6 > ] ( 4 14 3 )  [ < 3 4 5 > < 2 5 18 > < 2 6 13 > ] ( 5 11 13 )  } ( 1 2 3 )
+{  [ < 5 6 13 > < 3 4 5 > < 3 9 11 > ] ( 4 14 3 )  [ < 5 7 13 > < 1 11 15 > < 3 6 8 > ] ( 5 12 3 )  [ < 3 4 13 > < 2 5 12 > < 2 13 16 > ] ( 5 17 2 )  } ( 3 5 7 )
+}
+
+
+//Part II
+//The following matrices are artifically created. 
+//Just to show you the format of cout << DB << endl;
+
+3 2 5 17 18 8 9 13
+6 1 4 19 11 3 16 7
+8 9 4 7 1 2 9 0
+12 4 17 0 2 6 19 1
+13 12 5 17 18 8 9 13
+6 1 14 19 11 3 16 7
+8 9 4 7 1 12 9 0
+12 14 17 0 2 16 19 1
+1 3 12 8 2 15 7 4
+
+12 4 17 0 2 6
+13 12 5 17 18 8
+6 1 14 19 11 3
+8 9 4 7 1 12
+12 14 17 0 2 16
+1 3 12 8 2 15
+
+...
+
+
+
+*/
+

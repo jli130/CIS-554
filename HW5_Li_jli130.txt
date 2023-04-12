@@ -1,0 +1,398 @@
+//HW5 Due: 11:59pm, Sunday October 30
+//You are not allowed to use any extra sturctures such as arrays, vectors or lists in this HW.
+//No additional functions allowed.
+
+#include <iostream>
+#include <memory> //for smart pointers
+#include <vector>
+
+using namespace std;
+
+class node {
+public:
+	shared_ptr < vector<shared_ptr<int>> > Value;
+	shared_ptr<node> south;
+	weak_ptr<node> east;
+	node() {
+		Value = make_shared<vector<shared_ptr<int>>>();
+	}
+};
+
+
+class Rec {//rectangle; See the diagram for HW5.
+public:
+	int Rows;//Number of Rows
+	int Cols;//Number of Columns
+	shared_ptr<node> head;
+	Rec() : Rows{ 0 }, Cols{ 0 } {}
+
+	//Implement all the following member functions.
+	Rec(int r, int c);//constructor; all vectors will be empty.
+	Rec(const initializer_list<initializer_list<initializer_list<int>>>& I); //The third initialize_list is for the vector
+	////The second initializer_list for each row
+
+	Rec(const Rec& T);//copy constructor
+	Rec operator=(const Rec& T); //copy assignment
+	~Rec();//destructor
+	Rec(Rec&& T);//move constructor
+	void operator=(Rec&& T);//move assignment
+	Rec Times(int k) const;//Return a Rec object with all values being k times of those in *this .
+	void DeleteR(int r); //Delete row r ; the first row is row 0
+	void DeleteC(int c); //Delete column c ; the first column is column 0.
+};
+
+
+
+ Rec :: Rec(int r, int c)//constructor; all vectors will be empty.
+{
+	 Rows = r;
+	 Cols = c;
+	 head = { make_shared<node>() };
+	 auto v = head;
+	 for (auto i = 1; i < Rows * Cols; i++) {
+		 shared_ptr<node> p = { make_shared<node>() };
+		 v->south = p;
+		 v = v->south;
+	 }
+	 v->south = head;
+	 auto k = head;
+	 
+	 for(auto i = 0; i < (Rows) * (Cols - 1); i++){
+		 auto x = k;
+		 for (auto j = 0; j < Rows; j++) {
+			 x = x->south;
+		 }
+		k->east = x;
+		 k = k->south;
+	 }
+	 for (auto i = 0; i < Cols; i++) {
+		 auto x = k;
+		 for (auto j = 0; j < Rows; j++) {
+			 x = x->south;
+		 }
+		 k->east = x->south;
+		 k = k->south;
+	 }
+	 auto p1 = head;
+	 for (auto i = 0; i < Cols; i++) {
+		 auto p2 = p1;
+		 auto p3 = p1;
+		 for (auto j = 1; j < Rows; j++) {
+			 p2 = p2->south;
+		 }
+		 p3 = p2->south;
+		 p2->south = p1;
+		 p1 = p3;
+	 }
+	 
+	cout << "Constructor" << endl;
+	}
+
+ Rec::Rec(const initializer_list<initializer_list<initializer_list<int>>>& I):Rec(I.size(), I.begin()->size()){
+	 //Rec R1{ { {1,1,1}, {2,2}, {3,3,3}}, {{4,4}, {5,5, 5,5}, {6,6}},{{7, 7, 7},{8,8}, {9}}, {{10,10,10,10}, {11,11}, {12,12,12,12,12}}
+	 auto x = head;
+	 for (auto i : I) {
+		 for (auto j : i) {
+			 for (auto k : j) {
+				 x->Value->push_back(make_shared<int>(k));
+			 }
+			 x = x->east.lock();
+		 }
+	 }
+	 cout << "Initializer List" << endl;
+ }
+
+ Rec :: Rec(const Rec& T):Rec(T.Rows, T.Cols)//copy constructor
+ {
+	 auto temp = T.head;
+	 auto v = head;
+	 for (auto i = 0; i != Rows; i++) {
+		 for (auto j = 0; j != Cols; j++) {
+			 for (auto i : *temp->Value) {
+				 v->Value->push_back(make_shared<int>(*i));
+			 }
+			 v = v->east.lock();
+			 temp = temp->east.lock();
+		 }
+	 }
+	 cout << "Copy Constructor" << endl;
+ }
+
+ Rec :: ~Rec() {//destructor
+	 if (head) {
+	 for (auto i = 0; i != Cols; i++) {
+			 head->south.reset();
+			 head = head->east.lock();
+		 }
+	 }
+	 cout << "Destructor" << endl;
+ }
+
+Rec Rec::operator=(const Rec& T){//copy assignment
+	 for (auto i = 0; i != Cols; i++) {
+		 head->south.reset();
+		 head = head->east.lock();
+	 }
+	 Rows = T.Rows;
+	 Cols = T.Cols;
+	 head = { make_shared<node>() };
+	 head = { make_shared<node>() };
+	 auto v = head;
+	 for (auto i = 1; i < Rows * Cols; i++) {
+		 shared_ptr<node> p = { make_shared<node>() };
+		 v->south = p;
+		 v = v->south;
+	 }
+	 v->south = head;
+	 auto k = head;
+
+	 for (auto i = 0; i < (Rows) * (Cols - 1); i++) {
+		 auto x = k;
+		 for (auto j = 0; j < Rows; j++) {
+			 x = x->south;
+		 }
+		 k->east = x;
+		 k = k->south;
+	 }
+	 for (auto i = 0; i < Cols; i++) {
+		 auto x = k;
+		 for (auto j = 0; j < Rows; j++) {
+			 x = x->south;
+		 }
+		 k->east = x->south;
+		 k = k->south;
+	 }
+	 auto p1 = head;
+	 for (auto i = 0; i < Cols; i++) {
+		 auto p2 = p1;
+		 auto p3 = p1;
+		 for (auto j = 1; j < Rows; j++) {
+			 p2 = p2->south;
+		 }
+		 p3 = p2->south;
+		 p2->south = p1;
+		 p1 = p3;
+	 }
+	 auto temp = T.head;
+	 auto x = head;
+	 for (auto i = 0; i != Rows; i++) {
+		 for (auto j = 0; j != Cols; j++) {
+			 for (auto i : *temp->Value) {
+				 x->Value->push_back(make_shared<int>(*i));
+			 }
+			 x = x->east.lock();
+			 temp = temp->east.lock();
+		 }
+	 }
+	cout << "Copy Assignment" << endl;
+	return *this;
+ } 
+
+Rec::Rec(Rec&& T) {// move constructor
+	Rows = T.Rows;
+	Cols = T.Cols;
+	head = T.head;
+	T.head.reset();
+	cout << "Move Constructor" << endl;
+}
+
+void Rec :: operator=(Rec&& T) { // move assignment
+	for (auto i = 0; i != Cols; i++) {
+		head->south.reset();
+		head = head->east.lock();
+	}
+	Rows = T.Rows;
+	Cols = T.Cols;
+	head = T.head;
+	T.head.reset();
+	cout << "Move Assignment" << endl;
+}
+
+
+Rec Rec :: Times(int k) const {
+	Rec temp{ *this };
+	int size = temp.Cols * temp.Rows;
+	auto p = temp.head;
+	for (auto i = 0; i < size; i++) {
+		for (auto j : *p->Value) {
+			*j *= k;
+		}
+		p = p->east.lock();
+	}
+	cout << "Times" << endl;
+	return temp;
+}
+
+void Rec::DeleteC(int c) {
+	if (c == 0) {
+		auto p = head;
+		auto p1 = p;
+		for (auto i = 1; i < Cols; i++) {
+			p = p->east.lock();
+		}
+		for (auto j = 1; j < Rows; j++) {
+			p->east = p1->south->east.lock();
+			p1 = p1->south;
+			p = p->south;
+		}
+		head = head->east.lock();
+		p1->south.reset();
+	}
+	else if (c == Cols - 1) {
+		auto p = head;
+		auto p1 = p;
+		auto p2 = p;
+		for (auto i = 1; i < c; i++) {
+			p = p->east.lock();
+		}
+		for (auto i = 1; i < Cols; i++) {
+			p2 = p2->east.lock();
+		}
+		for (auto j = 1; j < Rows; j++) {
+			p->east = p1->south;
+			p1 = p1->south;
+			p = p->south;
+		}
+		p2->south.reset();
+	}
+	else {
+		auto p = head;
+		for (auto i = 1; i < c; i++) {
+			p = p->east.lock();
+		}
+		auto p1 = p->east.lock();
+		auto p2 = p1->east.lock();
+		for (auto i = 0; i < Rows; i++) {
+			p->east = p2;
+			p = p->south;
+			p1 = p1->south;
+			p2 = p2->south;
+		}
+		p1->south.reset();
+	}
+	Cols = Cols - 1;
+}
+void Rec :: DeleteR(int r) {
+	if (r == 0) {
+		auto p = head;
+		auto p1 = p;
+		head = head->south;
+		for (auto i = 1; i < Rows; i++) {
+			p = p->south;
+		}
+		for (auto i = 1; i < Cols; i++) {
+			auto p2 = p1;
+			p->south = p1->south;
+			p1 = p1->east.lock();
+			p = p->east.lock();
+			if (i == Cols - 1) {
+				p->east = head;
+			}
+			p2.reset();
+		}
+	}
+	else if (r == Rows - 1) {
+		auto p = head;
+		auto p1 = p;
+		for (auto i = 1; i < Rows-1; i++) {
+			p = p->south;
+		}
+		for (auto i = 1; i < Cols; i++) {
+
+			auto p2 = p->south;
+			p->south = p1;
+			p1 = p1->east.lock();
+			p = p->east.lock();
+			if (i == Cols - 1) {
+				p->east = head;
+			}
+			p2.reset();
+		}
+	}
+	else {
+		auto p = head;
+		for (auto i = 1; i < r-1; i++) {
+			p = p->south;
+		}
+		for (auto i = 1; i < Cols; i++) {
+			auto p1 = p->south;
+			auto p2 = p1->south;
+			p->south = p2;
+			p = p->east.lock();
+			p1 = p1->east.lock();
+			if (i == Cols - 1) {
+				p->east = p1->east.lock();
+			}
+			p1.reset();
+		}
+	}
+	Rows = Rows - 1;
+}
+ostream& operator<<(ostream& str, const vector<shared_ptr<int>>& V) {
+	//Your code
+	str << "( ";
+	for (auto i : V) {
+		str << (*i) << " ";
+	}
+	str << ")";
+
+	return str;
+}
+
+ostream& operator<<(ostream& str, const Rec&& R) {//Print in column-major order; that is column by column 
+	//Your code
+	shared_ptr<node> v = R.head;
+	for (auto i = 0; i < R.Cols; i++){
+		for (auto j = 0; j < R.Rows; j++) {
+			str << *v->Value << " ";
+			v = v->south;
+		}
+	str << endl;
+		v = v->east.lock();
+	}
+	
+	return str;
+}
+
+
+ostream& operator<<(ostream& str, const Rec& R) {//Print in row-major order; row by row
+	//Your code
+	shared_ptr<node> v = R.head;
+	for (auto j = 0; j < R.Rows; j++) {
+		for (auto i = 0; i < R.Cols; i++) {
+			str << *v->Value << " ";
+			v = v->east.lock();
+		}
+		str << endl;
+	}
+	return str;
+}
+
+
+int main() {
+	Rec R0(3, 4);
+	cout << endl;
+
+	Rec R1{ { {1,1,1}, {2,2}, {3,3,3}}, {{4,4}, {5,5, 5,5}, {6,6}},
+	{{7, 7, 7},{8,8}, {9}}, {{10,10,10,10}, {11,11}, {12,12,12,12,12}} };//4 rows, 3 columns
+	cout << R1 << endl;
+	cout << endl;
+	cout << move(R1) << endl;//column major printing
+
+	Rec R2(R1);
+	cout << R2 << endl;
+	Rec R3;
+	R3 = R2;
+	cout << R3 << endl;
+
+
+	R2 = R1.Times(4);
+	cout << R2 << endl;
+	R1.DeleteR(3);
+	cout << R1 << endl;
+
+	R2.DeleteC(2);
+	cout << R2 << endl;
+
+	return 0;
+}

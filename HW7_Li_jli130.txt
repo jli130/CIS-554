@@ -1,0 +1,75 @@
+//"I did the whole HW all by myself without discussing with anyone else
+//or referring to any sources."
+//HW7 Recursive Bitonic Sort
+// Due: Monday Nov. 28, at 11:59pm
+//This HW is in the form of Take-Home Exam.
+// You have to do it all by yourself including both
+// concept development and coding.
+//The first line of your submitted code has to be:
+//"I did the whole HW all by myself without discussing with anyone else
+//or referring to any sources."
+//You can contact TA and instructor for clarification
+//Hints will only be given in class or mail broadcast.
+//No individual hints will be provided.
+//
+
+//Only 1-level for loop allowed.
+//multi-level (nested for loops) are not allowed.
+
+#include <iostream>
+#include <vector>
+#include<algorithm>
+
+
+
+using namespace std;
+
+void Sort(vector<int>& Data, int n1, int n2, bool Up);//
+//up is true will sort data in ascending order, else will sort data in descending order.
+int main() {
+	int n{ 1024 }, m{ 44 };//Assume number of nodes is power of 2.
+	vector<int> Data(n);
+	for (auto& i : Data) i = rand() % m;
+	Sort(Data, 0, int(Data.size() - 1), true);
+
+	for (auto& i : Data) cout << i << " ";
+	return 0;
+}
+
+void Front(vector<int>& Data, int n1, int n2, bool up) {
+	//Front will be called by Sort.
+	//
+		//Your recursive code;
+	if (n2 == 0) return;
+	auto i = n2 / 2;
+	for (auto j = 0; j <= i + n1 + 1; j++)
+	{
+		if ((up == true) && (Data[j] > Data[j + i])) {
+			swap(Data[j], Data[j + i]);
+		}
+		if ((up == false) && (Data[j] < Data[j + i])) {
+			swap(Data[j], Data[j + i]);
+		}
+	}
+	Front(Data, n1, i, up);
+	Front(Data, i + n1 + 1, i, up);
+		
+
+}
+
+
+
+//IF you can do everything in function sort without calling Front. It is alright.
+
+void Sort(vector<int>& Data, int n1, int n2, bool Up) {
+	//Sorting in range [n1 ... n2] .
+	//Your recursive code
+	//You can call Front to complete the sorting.
+	if (n2 == 0) return;
+	int i = n2 / 2;
+	Sort(Data, n1, i, true);
+	Sort(Data, i + 1, i, false);
+	Front(Data, n1, n2, Up);
+	
+	
+}

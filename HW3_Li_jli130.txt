@@ -1,0 +1,231 @@
+//HW3 Due: 11:59pm, Saturday, Oct. 8 
+//You are not allowed to use any extra functions
+//You are not alllowed to use any extra class.
+
+#include <iostream>
+#include <map>
+#include <list>
+
+
+using namespace std;
+
+
+class course {
+public:
+	string name;
+	int section;
+	int credits;
+	string grade;
+	course() {}
+	course(string n, int s, int c, string g) { name = n; section = s; credits = c; grade = g; }
+};
+
+
+template <class T> class Record {
+public:
+
+	map<int, list< pair<int*, T*>* >*> Data;
+
+	Record() { }
+	Record(const initializer_list < pair<int, initializer_list<pair <int, T>>>>& I);
+	Record(const Record<T>& R);//Copy Constructor
+	void operator=(const Record<T>& R);//Copy Assignment
+	~Record();//Destructor
+	Record<T> deleteFirst();//Delete First element of Data (see sample screenshot)
+	Record(Record<T>&& R);//Move Constructor
+	void operator=(Record<T>&& R);//Move Assignment
+
+};
+
+
+
+template <class T> Record<T>::Record(const initializer_list < pair<int, initializer_list<pair <int, T>>>>& I) {
+	// Record<course> R1{ {10, { {12, C1}, {9, C2}  }},
+	//	{7, {{8, C3}, {3, C4}, {1, C5}}},{4, {{21, C6}, {15, C7}} } };
+	//Your code
+	for (auto it1 : I) {
+		int k = it1.first;
+		Data[k] = new list <pair <int*, T*>*>{};
+		for (auto it2 : it1.second) {
+			int* i = new int{ it2.first};
+			T* c = new T{ it2.second};
+			pair<int*, T*>* p = new pair <int*, T*>{ i, c };
+			Data[k]->push_back(p);
+		}
+	}
+	cout << "Initializer List" << endl;
+}
+
+template <class T> Record<T>::Record(const Record<T>& R) {    //Copy constructor
+	//Your code
+	for (auto it1 = R.Data.begin(); it1 != R.Data.end(); it1++) {
+		int k = it1->first;
+		Data[k] = new list <pair <int*, T*>*>{};
+		for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+			int* i = new int{ *((*it2)->first) };
+			T* c = new T{ *((*it2)->second) };
+			pair<int*, T*>* p = new pair <int*, T*>{ i, c };
+			Data[k]->push_back(p);
+		}
+	}
+	cout << "Copy constructor" << endl;
+}
+
+template<class T> Record<T>::~Record() {//Destructor
+	//Your code
+	for (auto it1 = Data.begin(); it1 != Data.end(); it1++) {
+		for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+			delete (*it2)->first;
+			(*it2)->first = nullptr;
+			delete (*it2)->second;
+			(*it2)->second = nullptr;
+
+			(*it2) = nullptr;
+			delete* it2;
+		}
+		it1->second->clear();
+		it1->second = nullptr;
+		delete it1->second;
+	}
+	Data.clear();
+	cout << "Destructor" << endl;
+}
+
+template <class T> void Record<T>::operator=(const Record<T>& R) {//Copy Assignment
+	//Your code
+	if (this->Data != R.Data) {
+		for (auto it1 = Data.begin(); it1 != Data.end(); it1++) {
+			int k = it1->first;
+			for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+				(*it2)->first = nullptr;
+				delete (*it2)->first;
+				(*it2)->second = nullptr;
+				delete (*it2)->second;
+				(*it2) = nullptr;
+				delete* it2;
+			}
+			it1->second->clear();
+			it1->second = nullptr;
+			delete it1->second;
+		}
+		Data.clear();
+		for (auto it1 = R.Data.begin(); it1 != R.Data.end(); it1++) {
+			int k = it1->first;
+			Data[k] = new list <pair <int*, T*>*>{};
+			for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+				int* i = new int{ *((*it2)->first) };
+				T* c = new T{ *((*it2)->second) };
+				pair<int*, T*>* p = new pair <int*, T*>{ i, c };
+				Data[k]->push_back(p);
+			}
+		}
+
+	}
+	cout << "Copy Assignment" << endl;
+}
+
+
+template<class T> Record<T> Record<T>::deleteFirst() {//DeleteFirst
+	//Your code
+	
+	auto temp{ *this };
+	for (auto i : *(temp.Data.begin()->second)) {
+		i->first = nullptr;
+		delete i->first;
+		i->second = nullptr;
+		delete i->second;
+		i = nullptr;
+		delete i;
+	}
+	temp.Data.begin()->second->clear();
+	temp.Data.begin()->second = nullptr;
+	delete(temp.Data.begin()->second);
+	temp.Data.erase(temp.Data.begin()->first);
+	cout << "Delete First" << endl;
+	return temp;
+}
+
+template <class T> Record<T>::Record(Record<T>&& R) {//Move Constructor
+	//Your code
+	Data = R.Data;
+	R.Data.clear();
+	cout << "Move constructor" << endl;
+}
+
+template <class T> void Record<T>::operator=(Record<T>&& R) {//Move Assignment
+	if (this->Data != R.Data) {
+		for (auto it1 = Data.begin(); it1 != Data.end(); it1++) {
+			for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+				(*it2)->first = nullptr;
+				delete (*it2)->first;
+				(*it2)->first = nullptr;
+				delete (*it2)->second;
+				(*it2) = nullptr;
+				delete* it2;
+			}
+			it1->second->clear();
+			it1->second = nullptr;
+			delete it1->second;
+		}
+		Data.clear();
+		Data = R.Data;
+		R.Data.clear();
+		cout << "Move Assignment" << endl;
+	}
+
+
+}
+
+
+//You need to implement all needed overloaded operator<<
+ostream& operator<<(ostream& str, const course& A) { str << "(" << A.name << " " << A.section << " " << A.credits << " " << A.grade << ")"; return str; }
+
+template <class T> ostream& operator<<(ostream& str, const Record<T>& I) {
+	str << "{ ";
+	for (auto it1 = I.Data.begin(); it1 != I.Data.end(); it1++) {
+		str << "{ ";
+		str << it1->first;
+		str << "{ ";
+		for (auto it2 = it1->second->begin(); it2 != it1->second->end(); it2++) {
+			str << *((* it2)->first) << " ";
+			str << *((* it2)->second);
+			str << "  ";
+		}
+		str << "} ";
+		str << "} ";
+	}
+	str << "} ";
+
+	return str;
+}
+
+
+int main() {
+	course C1("CIS554", 1, 3, "A-"), C2("CSE674", 1, 3, "B+"), C3("MAT296", 8, 4, "A"), C4("WRT205", 5, 3, "A");
+	course C5("CIS351", 2, 3, "A-"), C6("PSY205", 5, 3, "B+"), C7("MAT331", 2, 3, "A"), C8("ECN203", 4, 3, "A");
+
+
+	Record<course> R1{ {10, { {12, C1}, {9, C2}  }},
+		{7, {{8, C3}, {3, C4}, {1, C5}}},{4, {{21, C6}, {15, C7}} } };
+
+	cout << R1 << endl;
+
+
+	Record<course> R2{ R1 };
+	cout << R2 << endl;
+
+	Record<course> R3;
+	R3 = R1;
+	cout << R3 << endl;
+
+	R3 = R1.deleteFirst();
+	cout << R3 << endl;
+
+	R3 = R3;
+	cout << R3 << endl;
+
+	return 0;
+
+}
+
+

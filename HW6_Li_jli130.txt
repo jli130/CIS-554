@@ -1,0 +1,211 @@
+//HW6 Due : Sunday, Nov. 13 at 11 : 59pm
+#include <iostream>
+#include <list>
+#include <vector>
+#include <set>
+#include <map>
+//You are not allowed to use extra function.
+//No external structures (such as array, list, vector, etc.) are allowed.
+
+using namespace std;
+
+class ThreeD {
+public:
+	int ht;
+	int wid;
+	int dep;
+	ThreeD() :ht(0), wid(0), dep(0) {}
+	ThreeD(int i, int j, int k) : ht(2 * i), wid(2 * j), dep(2 * k) {}
+	int vol() const { return ht * wid * dep; }
+	//anything here?
+	int sum() const { return ht + wid + dep; }
+};
+
+class myCompare {
+public:
+	//a number of functors
+template <class T> bool operator()(const  vector<T> a, const vector<T> b) const { 
+		int k = 0;
+		for (auto i : a) {
+			k += i.sum();
+		}
+		int j = 0;
+		for (auto l : b) {
+			j += l.sum();
+		}
+		return k > j; 
+	}
+
+	bool operator()(const vector<ThreeD>* k1, const vector<ThreeD>* k2) const {
+		int a = 0;
+		int b = 0;
+		for (auto i : *k1) {
+			a += i.sum();
+		}
+		for (auto j : *k2) {
+			b += j.sum();
+		}
+		return a < b;
+	}
+
+	bool operator()(const map< vector<ThreeD>*, list<int*>, myCompare>& m1, const  map< vector<ThreeD>*, list<int*>, myCompare>& m2) const {
+		int a = 0;
+		int b = 0;
+		for (auto i : m1) {
+			for (auto j : *(i.first)) {
+				a += j.sum();
+			}
+			for (auto k : i.second) {
+				a += *k;
+			}
+		}
+		for (auto l : m2) {
+				for (auto j : *(l.first)) {
+					b += j.sum();
+				}
+				for (auto k : l.second) {
+					b += *k;
+				}
+			}
+		return a < b;
+		}
+
+};
+
+//Use template to implement the funciton Sort.
+template <class T1, class T2> void Sort(list<vector<T1>>& L, T2 x) {
+	for (auto i = L.begin(); i != --L.end(); i++) {
+		for (auto i = L.begin(); i != --L.end(); i++) {
+			auto j = next(i);
+			if (x(*i, *j)) {
+				swap(*i, *j);
+			}
+		}
+	}
+}
+
+/*
+For Part I: To compare two vector elements of list, we will compare
+the sum of all ThreeD volumes of the two vectors.
+For Part II, compare the sums of all int values in the structure for comparison.
+
+*/
+
+template <class T> ostream& operator<<(ostream& str, const list<T>& V) {
+	str << "< ";
+	for (auto i : V) {
+		str << i  << " ";
+	}
+	str << " >";
+	return str;
+}
+
+template <class T> ostream& operator<<(ostream& str, const list<T*>& V) {
+	str << "< ";
+	for (auto i : V) {
+		str << *i << " ";
+	}
+	str << " >";
+	return str;
+}
+
+template <class T> ostream& operator<<(ostream& str, const vector<T>& V) {
+	str << "[ ";
+	for (auto i : V) {
+		str << i;
+	}
+	str << " ]";
+	return str;
+}
+
+ostream& operator<<(ostream& str, const ThreeD& d) {
+	str << "(" << d.ht << ", " << d.wid << ", " << d.dep << ")";
+	return str;
+}
+
+
+
+template< class T1, class T2> ostream& operator<<(ostream& str, const map<T1, T2>& M) {
+	str << "& ";
+	for (auto& i : M) { str << *(i.first) << " " << i.second << "  "; }//range base for loop
+	str << "&" << endl;
+	return str;
+}
+
+template< class T1, class T2> ostream& operator<<(ostream& str, const map<T1, T2, myCompare>& M) {
+	str << "& ";
+	for (auto& i : M) { str << *(i.first) << " " << i.second << "  "; }//range base for loop
+	str << "&" << endl;
+	return str;
+}
+
+template< class T> ostream& operator<<(ostream& str, const set<T>& S) {
+	str << "{ " << endl;
+	for (auto& i : S) { str << i << " "; }//range base for loop
+	str << "}";
+	return str;
+}
+
+template< class T> ostream& operator<<(ostream& str, const set<T, myCompare>& S) {
+	str << "{ " << endl;
+	for (auto& i : S) { str << i << " "; }//range base for loop
+	str << "}";
+	return str;
+}
+
+int main() {
+	//Part I
+	vector<ThreeD> V1{ {3,2,1}, {4,1,2}, {3,2,2}, {1,1,2 } };
+	vector<ThreeD> V2{ {3,5,1}, {4,2,2}, {3,2,6}, {1,4,2 }, {3,3,3} };
+	vector<ThreeD> V3{ {4,4,3}, {4,6,1}, {7,2,1} };
+	vector<ThreeD> V4{ {3,5,1}, {4,2,2}, {3,2,6}, {1,4,2 }, {3,3,3} };
+
+	list<vector<ThreeD>> L1{ V1, V2, V3, V4 };
+
+	//Implement the function Sort.
+	myCompare x;
+	Sort(L1, x) ; 
+	cout << L1 << endl;
+
+	//                ... a lambda will bubble sort elements decreasingly
+
+	//You need to overload operator<< for the following statement.
+	Sort(L1, [](vector<ThreeD> a, const vector<ThreeD> b) {
+		int k = 0;
+		for (auto i : a) {
+			k += i.sum();
+		}
+
+		int j = 0;
+		for (auto l : b) {
+			j += l.sum();
+		}
+		return k < j; });
+
+	cout << L1 << endl;
+	cout << endl << endl;
+
+	//Part II
+
+
+
+	vector<ThreeD>* pV1{ new vector<ThreeD>{ {3,2,1}, {4,1,2}, {3,2,2}, {1,1,2 } } };
+	vector<ThreeD>* pV2{ new vector<ThreeD>{ {3,5,1}, {4,2,2}, {3,2,6}, {1,4,2 }, {3,3,3} } };
+	vector<ThreeD>* pV3{ new vector<ThreeD>{ {4,4,3}, {4,6,1}, {7,2,1} } };
+	vector<ThreeD>* pV4{ new vector<ThreeD>{ {3,5,1}, {4,2,2}, {3,2,6}, {1,4,2 }, {3,3,3} } };
+	vector<ThreeD>* pV5{ new vector<ThreeD>{ {4,5,1}, {4,5,2}, {3,1,1}, {1,4,2 }, {3,3,3}, {6,1,1} } };
+	list<int*> l1{ new int{6}, new int {11}, new int {3}, new int {5}, new int {9} };
+	list<int*> l2{ new int{12}, new int {1}, new int {13} };
+	list<int*> l3{ new int{6}, new int {2}, new int {5}, new int {7} };
+	list<int*> l4{ new int{2}, new int {11}, new int {3}, new int {1}, new int {6} };
+	list<int*> l5{ new int{6}, new int {14}, new int {3}, new int {2} };
+
+	//The following won't compile.  Fix the problem.
+	set<map<vector<ThreeD>*, list<int*>, myCompare>, myCompare> S1{ { {pV4, l4}, {pV5, l1}, {pV4, l3   }}, {  { pV2, l2}, {pV1,l5}, {pV3, l4}},  { {pV1, l1}, {pV3, l3} , {pV1, l2} } };
+
+	//Overload operator<< such that the followng statement will run.
+	cout << S1 << endl;
+
+
+	return 0;
+}
